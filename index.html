@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pixel Bike Race</title>
+<style>
+body { background: #000; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; image-rendering: pixelated; }
+canvas { border: 4px solid #333; image-rendering: pixelated; }
+</style>
+</head>
+<body>
+<canvas id="game" width="400" height="600"></canvas>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+let bikeX = 180;
+let speed = 5;
+let obstacles = [];
+let score = 0;
+let frame = 0;
+let gameOver = false;
+
+function spawn() {
+  const lane = Math.floor(Math.random()*3);
+  obstacles.push({x: lane*120 + 40, y: -50, w: 40, h: 60});
+}
+
+function loop() {
+  if (gameOver) return;
+  frame++;
+  if (frame % 80 === 0) spawn();
+  score += 0.1;
+
+  obstacles.forEach(o => {
+    o.y += speed;
+    if (o.y > 600) obstacles = obstacles.filter(ob => ob !== o);
+    if (bikeX < o.x + o.w && bikeX + 40 > o.x && 500 < o.y + o.h && 500 + 40 > o.y) {
+      gameOver = true;
+      alert('Crash! Score: ' + Math.floor(score));
+      location.reload();
+    }
+  });
+
+  ctx.fillStyle = '#333';
+  ctx.fillRect(0,0,400,600);
+  // Road lines
+  ctx.fillStyle = '#fff';
+  for (let i=0; i<3; i++) {
+    for (let y=0; y<600; y+=40) {
+      ctx.fillRect(i*120 + 110, (y + frame*5) % 600, 4, 20);
+    }
+  }
+  // Bike
+  ctx.fillStyle = '#f00';
+  ctx.fillRect(bikeX, 500, 40, 40);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(bikeX+5, 510, 10, 10);
+  ctx.fillRect(bikeX+25, 510, 10, 10);
+  // Obstacles
+  ctx.fillStyle = '#00f';
+  obstacles.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
+  ctx.fillStyle = '#fff';
+  ctx.font = '20px monospace';
+  ctx.fillText('Score: ' + Math.floor(score), 10, 30);
+  requestAnimationFrame(loop);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') bikeX = Math.max(20, bikeX - 120);
+  if (e.key === 'ArrowRight') bikeX = Math.min(340, bikeX + 120);
+});
+
+loop();
+</script>
+</body>
+</html>
